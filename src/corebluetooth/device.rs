@@ -4,7 +4,7 @@ use objc_foundation::{INSArray, INSFastEnumeration, INSString, NSArray};
 use objc_id::ShareId;
 
 use super::delegates::{PeripheralDelegate, PeripheralEvent};
-use super::types::{CBPeripheral, CBPeripheralState, CBUUID};
+use super::types::{CBPeripheral, CBL2CAPChannel, CBPeripheralState, CBUUID};
 use crate::error::ErrorKind;
 use crate::pairing::PairingAgent;
 use crate::{Device, DeviceId, Error, Result, Service, Uuid};
@@ -203,5 +203,36 @@ impl DeviceImpl {
                 _ => (),
             }
         }
+    }
+
+    /// Open L2CAP channel given PSM
+    pub async fn open_l2cap_channel(&self, psm: u16) -> Result<objc_id::Id<CBL2CAPChannel, objc_id::Shared>> {
+        let mut receiver = self.delegate.sender().subscribe();
+
+        if !self.is_connected().await {
+            return Err(ErrorKind::NotConnected.into());
+        }
+
+        self.peripheral.open_l2cap_channel(psm);
+
+        let l2capchannel;
+
+        loop {
+            match receiver.recv().await.map_err(Error::from_recv_error)? {
+                PeripheralEvent::L2CAPChannelOpened { channel, error: None } => {
+                    l2capchannel = channel;
+                    break;
+                }
+                PeripheralEvent::L2CAPChannelOpened { channel, error } => {
+                    return Err(Error::from_nserror(error.unwrap()))
+                }
+                PeripheralEvent::Disconnected { error } => {
+                    return Err(Error::from_kind_and_nserror(ErrorKind::NotConnected, error));
+                }
+                _ => (),
+            }
+        }
+
+        Ok(l2capchannel)
     }
 }

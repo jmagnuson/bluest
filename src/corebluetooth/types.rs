@@ -144,6 +144,20 @@ impl CBATTError {
     pub const INSUFFICIENT_RESOURCES: CBATTError = CBATTError(17);
 }
 
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NSStreamStatus(pub NSInteger);
+
+impl NSStreamStatus {
+    pub const NOT_OPEN: NSStreamStatus = NSStreamStatus(0);
+    pub const OPENING: NSStreamStatus = NSStreamStatus(1);
+    pub const OPEN: NSStreamStatus = NSStreamStatus(2);
+    pub const READING: NSStreamStatus = NSStreamStatus(3);
+    pub const WRITING: NSStreamStatus = NSStreamStatus(4);
+    pub const AT_END: NSStreamStatus = NSStreamStatus(5);
+    pub const CLOSED: NSStreamStatus = NSStreamStatus(6);
+    pub const ERROR: NSStreamStatus = NSStreamStatus(7);
+}
+
 impl AdvertisementData {
     pub(super) fn from_nsdictionary(adv_data: &ShareId<NSDictionary<NSString, NSObject>>) -> Self {
         let is_connectable = adv_data
@@ -246,6 +260,9 @@ object_struct!(CBService);
 object_struct!(CBCharacteristic);
 object_struct!(CBDescriptor);
 object_struct!(CBL2CAPChannel);
+object_struct!(CBPeer);
+object_struct!(NSInputStream);
+object_struct!(NSOutputStream);
 
 impl NSError {
     pub fn code(&self) -> NSInteger {
@@ -407,6 +424,11 @@ impl CBPeripheral {
     pub fn services(&self) -> Option<ShareId<NSArray<CBService>>> {
         autoreleasepool(move || unsafe { option_from_ptr(msg_send![self, services]) })
     }
+
+    pub fn open_l2cap_channel(&self, psm: u16) {
+        unsafe { msg_send![self, openL2CAPChannel: psm] }
+    }
+    
     pub fn discover_services(&self, services: Option<&NSArray<CBUUID>>) {
         unsafe { msg_send![self, discoverServices: id_or_nil(services)] }
     }
@@ -524,5 +546,101 @@ impl CBDescriptor {
 
     pub fn value(&self) -> Option<ShareId<NSObject>> {
         autoreleasepool(move || unsafe { option_from_ptr(msg_send![self, value]) })
+    }
+}
+
+impl NSInputStream {
+    pub fn open(&self) -> c_void {
+        unsafe { msg_send![self, open] }
+    }
+    pub fn close(&self) -> c_void {
+        unsafe { msg_send![self, close] }
+    }
+    pub fn delegate(&self, id: ShareId<NSObject>) -> c_void {
+        unsafe { msg_send![self, delegate: id] }
+    }
+    pub fn schedule_in_run_loop(&self, run_loop: NSObject, run_loop_mode: NSString) -> c_void {
+        unsafe { msg_send![self, scheduleInRunLoop: run_loop forMode: run_loop_mode] }
+    }
+    pub fn remove_from_run_loop(&self, run_loop: NSObject, run_loop_mode: NSString) -> c_void {
+        unsafe { msg_send![self, removeFromRunLoop: run_loop forMode: run_loop_mode] }
+    }
+    pub fn property_for_key(&self, key: NSString) -> NSString {
+        unsafe { msg_send![self, propertyForKey: key] }
+    }
+    pub fn set_property_for_key(&self, id: ShareId<NSObject>, key: NSString) -> bool {
+        unsafe { msg_send![self, setProperty: id forKey: key] }
+    }
+    pub fn stream_status(&self) -> NSStreamStatus {
+        unsafe { msg_send![self, streamStatus] }
+    }
+    pub fn stream_error(&self) -> NSError {
+        unsafe { msg_send![self, streamError] }
+    }
+    pub fn read(&self, buffer: *const u8, max_length: NSUInteger) -> NSInteger {
+        unsafe { msg_send![self, read: buffer maxLength: max_length] }
+    }
+    pub fn get_buffer(&self, buffer: &[u8], length: &NSInteger) -> bool {
+        unsafe { msg_send![self, getBuffer: buffer length: length] }
+    }
+    pub fn has_bytes_available(&self) -> bool {
+        unsafe { msg_send![self, hasBytesAvailable] }
+    }
+}
+
+impl NSOutputStream {
+    pub fn open(&self) -> c_void {
+        unsafe { msg_send![self, open] }
+    }
+    pub fn close(&self) -> c_void {
+        unsafe { msg_send![self, close] }
+    }
+    pub fn delegate(&self, id: ShareId<NSObject>) -> c_void {
+        unsafe { msg_send![self, delegate: id] }
+    }
+    pub fn schedule_in_run_loop(&self, run_loop: NSObject, run_loop_mode: NSString) -> c_void {
+        unsafe { msg_send![self, scheduleInRunLoop: run_loop forMode: run_loop_mode] }
+    }
+    pub fn remove_from_run_loop(&self, run_loop: NSObject, run_loop_mode: NSString) -> c_void {
+        unsafe { msg_send![self, removeFromRunLoop: run_loop forMode: run_loop_mode] }
+    }
+    pub fn property_for_key(&self, key: NSString) -> NSString {
+        unsafe { msg_send![self, propertyForKey: key] }
+    }
+    pub fn set_property_for_key(&self, id: ShareId<NSObject>, key: NSString) -> bool {
+        unsafe { msg_send![self, setProperty: id forKey: key] }
+    }
+    pub fn stream_status(&self) -> NSStreamStatus {
+        unsafe { msg_send![self, streamStatus] }
+    }
+    pub fn stream_error(&self) -> NSError {
+        unsafe { msg_send![self, streamError] }
+    }
+    pub fn write(&self, buffer: &[u8], max_length: NSUInteger) -> NSInteger {
+        unsafe { msg_send![self, write: buffer maxLength: max_length] }
+    }
+    pub fn has_space_available(&self) -> bool {
+        unsafe { msg_send![self, hasSpaceAvailable] }
+    }
+}
+
+impl CBPeer {
+    pub fn identifier(&self) -> NSUUID {
+        unsafe { msg_send![self, identifier] }
+    }
+}
+
+impl CBL2CAPChannel {
+    pub fn input_stream(&self) -> &NSInputStream {
+        unsafe { msg_send![self, inputStream] }
+    }
+    pub fn output_stream(&self) -> &NSOutputStream {
+        unsafe { msg_send![self, outputStream] }
+    }
+    pub fn peer(&self) -> CBPeer {
+        unsafe { msg_send![self, peer] }
+    }
+    pub fn psm(&self) -> u16 {
+        unsafe { msg_send![self, PSM] }
     }
 }

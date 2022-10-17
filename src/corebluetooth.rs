@@ -8,7 +8,7 @@ pub mod error;
 pub mod service;
 
 mod delegates;
-mod types;
+pub mod types;
 
 /// A platform-specific device identifier.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

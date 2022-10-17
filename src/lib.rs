@@ -126,7 +126,7 @@ mod util;
 #[cfg(target_os = "linux")]
 mod bluer;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
-mod corebluetooth;
+pub mod corebluetooth;
 #[cfg(target_os = "windows")]
 mod windows;
 
