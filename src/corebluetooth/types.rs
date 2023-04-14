@@ -158,6 +158,19 @@ impl NSStreamStatus {
     pub const ERROR: NSStreamStatus = NSStreamStatus(7);
 }
 
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NSStreamEvent(pub NSInteger);
+
+impl NSStreamEvent {
+    pub const NONE: NSStreamEvent = NSStreamEvent(0);
+    pub const OPEN_COMPLETED: NSStreamEvent = NSStreamEvent(1<<0);
+    pub const HAS_BYTES_AVAILABLE: NSStreamEvent = NSStreamEvent(1<<1);
+    pub const HAS_SPACE_AVAILABLE: NSStreamEvent = NSStreamEvent(1<<2);
+    pub const ERROR_OCCURRED: NSStreamEvent = NSStreamEvent(1<<3);
+    pub const END_ENCOUNTERED: NSStreamEvent = NSStreamEvent(1<<4);
+}
+
 impl AdvertisementData {
     pub(super) fn from_nsdictionary(adv_data: &ShareId<NSDictionary<NSString, NSObject>>) -> Self {
         let is_connectable = adv_data
@@ -644,3 +657,8 @@ impl CBL2CAPChannel {
         unsafe { msg_send![self, PSM] }
     }
 }
+
+/*#[derive(Debug, Clone)]
+pub enum NSStreamEvent {
+    Connected,
+}*/

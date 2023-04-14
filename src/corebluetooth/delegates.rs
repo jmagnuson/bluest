@@ -140,6 +140,41 @@ impl TryFrom<NSInteger> for CBConnectionEvent {
     }
 }
 
+/*impl NSStreamEvent {
+    pub const NONE: NSStreamEvent = NSStreamEvent(0);
+    pub const OPEN_COMPLETED: NSStreamEvent = NSStreamEvent(1<<0);
+    pub const HAS_BYTES_AVAILABLE: NSStreamEvent = NSStreamEvent(1<<1);
+    pub const HAS_SPACE_AVAILABLE: NSStreamEvent = NSStreamEvent(1<<2);
+    pub const ERROR_OCCURRED: NSStreamEvent = NSStreamEvent(1<<3);
+    pub const END_ENCOUNTERED: NSStreamEvent = NSStreamEvent(1<<4);
+}*/
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NSStreamEvent {
+    None,
+    OpenCompleted,
+    HasBytesAvailable,
+    HasSpaceAvailable,
+    ErrorOccurred,
+    EndEncountered,
+}
+
+impl TryFrom<NSInteger> for NSStreamEvent {
+    type Error = NSInteger;
+
+    fn try_from(value: NSInteger) -> Result<Self, Self::Error> {
+        let val = match value {
+            0 => NSStreamEvent::None,
+            0b1 => NSStreamEvent::OpenCompleted,
+            0b10 => NSStreamEvent::HasBytesAvailable,
+            0b100 => NSStreamEvent::HasSpaceAvailable,
+            0b1000 => NSStreamEvent::ErrorOccurred,
+            0b10000 => NSStreamEvent::EndEncountered,
+            _ => return Err(value),
+        };
+        Ok(val)
+    }
+}
+
 macro_rules! delegate_method {
     (@value $param:ident: Object) => {
         ShareId::from_ptr($param.cast())
